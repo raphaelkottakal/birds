@@ -7,12 +7,16 @@ class Bird {
 		this.body = new THREE.Mesh(this.buildGeometry(), material);
 		this.flapOffset = 0;
 		// this.flapRate = Math.floor(Math.random() * (0.05 - 0.04 + 1)) + 0.04;
+		this.hoverForceMult = 10;
+		this.fallForceMult = 11;
+		this.flapSpeed = props.flapSpeed || 8;
 		this.flapAngle = 0;
-		this.flapDownRate = 2 * Math.PI / 180;
-		this.flapUpRate = Math.PI / 180;
+		this.flapDownRate = this.flapSpeed * Math.PI / 180;
+		this.flapUpRate = 10 * Math.PI / 180;
 		this.flapDown = true;
 		this.flapDownMax = 60 * Math.PI / 180;
 		this.flapUpMax = - 45 * Math.PI / 180;
+		this.flapForce = 0.0001;
 		// const min = -2;
 		// const max = 2;
 		// const x = Math.floor(Math.random() * (max - min + 1)) + min;
@@ -24,6 +28,16 @@ class Bird {
 		this.axis = new THREE.Vector3(0, 0, 1);
 		this.axis.normalize();
 	}
+	setFlapSpeed(speed) {
+		this.flapSpeed = speed;
+		this.flapDownRate = this.flapSpeed * Math.PI / 180;		
+	}
+	// addToAxis(vector) {
+	// 	this.axis.add(vector);
+	// 	console.log(this.axis);
+	// 	this.axis.normalize();
+	// 	console.log(this.axis);
+	// }
 	update() {
 		this.velocity.add(this.acceleration);
 		this.velocity.clampLength(0, 1);
@@ -83,7 +97,7 @@ class Bird {
 		birdGeometry.computeFaceNormals();
 		birdGeometry.computeVertexNormals();
 		birdGeometry.computeBoundingSphere();
-		console.log(birdGeometry);
+		// console.log(birdGeometry);
 		return birdGeometry;
 	}
 	addToScene(scene) {
@@ -108,11 +122,15 @@ class Bird {
 		scene.add(this.body);
 	}
 	flapWings() {
+		// const vSpeed = this.body.rotation.x;
+		// console.log(vSpeed);
+		// this.applyForce(new THREE.Vector3(vSpeed, 0, 0));
 		if (this.flapDown) {
 			this.body.geometry.vertices[0].applyAxisAngle(this.axis, this.flapDownRate);
 		  this.body.geometry.vertices[7].applyAxisAngle(this.axis, - this.flapDownRate);
 			this.flapAngle += this.flapDownRate;
-			this.applyForce(new THREE.Vector3(0, 0.0297, 0));
+			const yForce = this.flapForce * (this.flapAngle + 45) / (this.flapDownMax + 45) * this.flapSpeed * this.flapSpeed;
+			this.applyForce(new THREE.Vector3(0, yForce, 0));
 		} else {
 			this.body.geometry.vertices[0].applyAxisAngle(this.axis, - this.flapUpRate);
 		  this.body.geometry.vertices[7].applyAxisAngle(this.axis, this.flapUpRate);

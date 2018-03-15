@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import * as THREE from 'three';
 import Bird from './Bird';
+import Stats from 'stats.js';
 
 let OrbitControls = require('three-orbit-controls')(THREE)
 
@@ -9,7 +10,9 @@ class App extends Component {
     this.initThree();
   }
   initThree() {
-    const gravity = new THREE.Vector3(0, -0.01, 0);
+    this.stats = new Stats();
+    document.body.appendChild( this.stats.dom );
+    const gravity = new THREE.Vector3(0, -0.003, 0);
     let scene = new THREE.Scene();
     let camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
     camera.position.z = 50;
@@ -31,23 +34,13 @@ class App extends Component {
     let light = new THREE.AmbientLight(0xffffff, 0.3);
     scene.add(light);
 
-    // var spotLight = new THREE.SpotLight( 0xffffff, 1 );
-    // spotLight.position.set( 25, 25, 25 );
-    // // spotLight.lookAt(0, 0, 0);
-    // scene.add( spotLight );
-
     var pointLight = new THREE.PointLight( 0xffffff, 0.7 );
     pointLight.position.set( 10, 100, 50 );
     scene.add( pointLight );
 
-    var sphereSize = 1;
-    var pointLightHelper = new THREE.PointLightHelper( pointLight, sphereSize );
-    scene.add( pointLightHelper );
-
-    // const lightHelper = new THREE.SpotLightHelper( spotLight );
-		// scene.add( lightHelper );
-
-
+    // var sphereSize = 1;
+    // var pointLightHelper = new THREE.PointLightHelper( pointLight, sphereSize );
+    // scene.add( pointLightHelper );
 
     const flappyConfig = {
       position: new THREE.Vector3(0, 0, 0),
@@ -57,18 +50,70 @@ class App extends Component {
     flappy.body.lookAt(10, 0, 10);
     scene.add(flappy.body);
 
-    const controls = new OrbitControls(camera, this.refs.container);
-    function animate() {
-      requestAnimationFrame( animate );
+    new OrbitControls(camera, this.refs.container);
+    // const controls = new OrbitControls(camera, this.refs.container);
+    console.log(flappy);
+    let rise = true;
+    let hoverPoint = 3;
+    const animate = () => {
+      this.stats.begin();
       flappy.applyForce(gravity);
       flappy.update();
       flappy.flapWings();
+      if (flappy.body.position.y > hoverPoint && rise) {
+        flappy.setFlapSpeed(6);
+        rise = false;
+      } else if (flappy.body.position.y < hoverPoint && !rise) {
+        flappy.setFlapSpeed(8);
+        rise = true;
+      }
       renderer.render( scene, camera );
+      this.stats.end();
+      requestAnimationFrame( animate );
     }
-    controls.rotateSpeed = -0.3;
+    // controls.rotateSpeed = -0.3;
     animate();
     const handleClick = (e) => {
 
+    }
+    const handleKeydown = (event) => {
+      const keyCode = event.keyCode
+      const turnAngle = 4;
+      // console.log(event);
+
+      switch (keyCode) {
+      case 65:
+          console.log('Turn left');
+          flappy.body.rotateY( turnAngle * -Math.PI / 180);
+          break;
+      case 68:
+      console.log('Turn right');
+          flappy.body.rotateY(turnAngle * Math.PI / 180);
+          break;
+      case 83:
+          console.log('Turn up');
+          flappy.body.rotateX( turnAngle * -Math.PI / 180);
+          // flappy.applyForce(new THREE.Vector3(-0.01, 0, 0));
+        break;
+      case 87:
+          console.log('Turn down');
+          flappy.body.rotateX(turnAngle * Math.PI / 180);
+          // flappy.applyForce(new THREE.Vector3(0.01, 0, 0));
+        break;
+      // case 38:
+      //     console.log('Go up');
+      //     hoverPoint++;     
+      //     console.log('hoverPoint', hoverPoint);
+      //   break;
+      // case 38:
+      //     console.log('Go down');
+      //     hoverPoint--;
+      //     console.log('hoverPoint', hoverPoint);
+      //   break;
+    
+      default:
+        break;
+      }
     }
     const onResize = () => {
       camera.aspect = window.innerWidth / window.innerHeight;
@@ -78,6 +123,7 @@ class App extends Component {
 
     this.refs.container.addEventListener('click', handleClick);
     window.addEventListener('resize', onResize, false);
+    document.addEventListener('keydown', handleKeydown);
   }
   render() {
 

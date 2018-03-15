@@ -10,4 +10,4 @@ npm start
 ```
 
 This project was bootstrapped with [Create React App](https://github.com/facebookincubator/create-react-app).
-This project also used [threejs](https://threejs.org/) as it's WebGL api.
+This project also uses [threejs](https://threejs.org/) as it's WebGL api.
